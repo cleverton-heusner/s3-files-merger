@@ -29,10 +29,10 @@ class S3ObjectsMerger:
 
         if CONTENTS in objects:
             new_object = ''
-            new_object_extension = new_object_key.split(DOT)[-1]
+            new_object_extension = self.__extract_extension_from_object_key(new_object_key)
 
             for object_content in objects[CONTENTS]:
-                object_name = object_content[KEY].split('/')[-1]
+                object_name = self.__extract_name_from_object_key(object_content[KEY])
                 object_to_merge_key = f'{objects_to_merge_prefix}{object_name}'
 
                 if object_name.startswith(objects_to_merge_initial_name):
@@ -57,6 +57,14 @@ class S3ObjectsMerger:
             error_code = e.response['Error']['Code']
             if error_code == '404':
                 raise BucketNotFoundException('Bucket not found!')
+
+    @staticmethod
+    def __extract_extension_from_object_key(object_key: str):
+        return object_key.split(DOT)[-1]
+
+    @staticmethod
+    def __extract_name_from_object_key(object_key: str):
+        return object_key.split('/')[-1]
 
     @staticmethod
     def __merge_objects_line_by_line(object_to_merge, new_object):
