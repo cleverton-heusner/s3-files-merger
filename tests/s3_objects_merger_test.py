@@ -30,8 +30,8 @@ class S3ObjectsMergerTest(unittest.TestCase):
         expected_new_object_content = 'hello there\nhi me\nhi two\neai\nhi here'
         expected_total_objects_in_bucket = 1
 
-        files_to_send_to_s3 = ['part-00000.txt', 'part-00000.crc', 'part-00001.txt', 'part-00001.crc', '_SUCCESS.txt',
-                               '_SUCCESS.crc']
+        files_to_send_to_s3 = ['part-00000.txt', 'part-00000.crc', 'part-00001.txt', 'part-00001.crc', '_SUCCESS',
+                               '._SUCCESS.crc']
         for file in files_to_send_to_s3:
             with open(f'{dataset_path}{file}', 'rb') as f:
                 self.s3.upload_fileobj(f, S3ObjectsMergerTest.BUCKET_NAME, file)
@@ -62,8 +62,8 @@ class S3ObjectsMergerTest(unittest.TestCase):
         new_object_key = 'new_object_folder/legal.txt'
 
         self.s3.put_object(Bucket=S3ObjectsMergerTest.BUCKET_NAME, Key=new_object_prefix)
-        files_to_send_to_s3 = ['part-00000.txt', 'part-00000.crc', 'part-00001.txt', 'part-00001.crc', '_SUCCESS.txt',
-                               '_SUCCESS.crc']
+        files_to_send_to_s3 = ['part-00000.txt', 'part-00000.crc', 'part-00001.txt', 'part-00001.crc', '_SUCCESS',
+                               '._SUCCESS.crc']
         for file in files_to_send_to_s3:
             with open(f'{dataset_path}{file}', 'rb') as f:
                 self.s3.upload_fileobj(f, S3ObjectsMergerTest.BUCKET_NAME, file)
@@ -98,8 +98,8 @@ class S3ObjectsMergerTest(unittest.TestCase):
         new_object_key = 'legal.txt'
 
         self.s3.put_object(Bucket=S3ObjectsMergerTest.BUCKET_NAME, Key=objects_to_merge_sub_folder)
-        files_to_send_to_s3 = ['part-00000.txt', 'part-00000.crc', 'part-00001.txt', 'part-00001.crc', '_SUCCESS.txt',
-                               '_SUCCESS.crc']
+        files_to_send_to_s3 = ['part-00000.txt', 'part-00000.crc', 'part-00001.txt', 'part-00001.crc', '_SUCCESS',
+                               '._SUCCESS.crc']
         for file in files_to_send_to_s3:
             with open(f'{dataset_path}{file}', 'rb') as f:
                 self.s3.upload_fileobj(f, S3ObjectsMergerTest.BUCKET_NAME, f'{objects_to_merge_sub_folder}{file}')
@@ -135,8 +135,8 @@ class S3ObjectsMergerTest(unittest.TestCase):
         new_object_key = 'sub_folder/legal.txt'
 
         self.s3.put_object(Bucket=S3ObjectsMergerTest.BUCKET_NAME, Key=sub_folder)
-        files_to_send_to_s3 = ['part-00000.txt', 'part-00000.crc', 'part-00001.txt', 'part-00001.crc', '_SUCCESS.txt',
-                               '_SUCCESS.crc']
+        files_to_send_to_s3 = ['part-00000.txt', 'part-00000.crc', 'part-00001.txt', 'part-00001.crc', '_SUCCESS',
+                               '._SUCCESS.crc']
         for file in files_to_send_to_s3:
             with open(f'{dataset_path}{file}', 'rb') as f:
                 self.s3.upload_fileobj(f, S3ObjectsMergerTest.BUCKET_NAME, f'{sub_folder}{file}')
@@ -166,8 +166,8 @@ class S3ObjectsMergerTest(unittest.TestCase):
         expected_new_object_content = 'hello there\n\nhi me\n\nhi two\n\neai\n\nhi here'
         expected_total_objects_in_bucket = 1
 
-        files_to_send_to_s3 = ['part-00000.txt', 'part-00000.crc', 'part-00001.txt', 'part-00001.crc', '_SUCCESS.txt',
-                               '_SUCCESS.crc']
+        files_to_send_to_s3 = ['part-00000.txt', 'part-00000.crc', 'part-00001.txt', 'part-00001.crc', '_SUCCESS',
+                               '._SUCCESS.crc']
         for file in files_to_send_to_s3:
             with open(f'{dataset_path}{file}', 'rb') as f:
                 self.s3.upload_fileobj(f, S3ObjectsMergerTest.BUCKET_NAME, file)

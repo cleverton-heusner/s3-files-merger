@@ -8,7 +8,9 @@ CONTENTS = 'Contents'
 DOT = '.'
 KEY = 'Key'
 LINE_BREAK = '\n'
-SUCCESS = '_SUCCESS'
+
+SUCCESS_NO_EXTENSION = '_SUCCESS'
+SUCCESS_WITH_CRC_EXTENSION = f'.{SUCCESS_NO_EXTENSION}.crc'
 
 
 class S3ObjectsMerger:
@@ -38,7 +40,7 @@ class S3ObjectsMerger:
             with BytesIO(new_object[:-1].encode()) as file_obj:
                 client.upload_fileobj(Bucket=bucket_name, Key=f'{new_object_key}', Fileobj=file_obj)
 
-            self.__delete_success_objects(client, bucket_name, objects_to_merge_prefix, new_object_extension)
+            self.__delete_success_objects(client, bucket_name, objects_to_merge_prefix)
             client.close()
 
     @staticmethod
@@ -59,11 +61,10 @@ class S3ObjectsMerger:
         return new_object
 
     @staticmethod
-    def __delete_success_objects(client, bucket_name, objects_to_merge_prefix, new_object_extension):
-        objects_to_delete = []
-        for extension in [new_object_extension, 'crc']:
-            objects_to_delete.append({KEY: f'{objects_to_merge_prefix}{SUCCESS}{DOT}{extension}'})
-        client.delete_objects(Bucket=bucket_name, Delete={'Objects': objects_to_delete})
+    def __delete_success_objects(client, bucket_name, objects_to_merge_prefix):
+        success_objects = [SUCCESS_NO_EXTENSION, SUCCESS_WITH_CRC_EXTENSION]
+        for obj in success_objects:
+            client.delete_object(Bucket=bucket_name, Key=f'{objects_to_merge_prefix}{obj}')
 
 
 class BucketNotFoundException(Exception):
