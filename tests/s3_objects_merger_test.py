@@ -1,12 +1,11 @@
+import boto3
+import moto
 import os
 import unittest
+
 from os.path import sep, join, dirname
+from s3_objects_merger import S3ObjectsMerger, BucketNotFoundException
 
-import moto
-import boto3
-
-from s3_objects_merger import S3ObjectsMerger
-    
 
 @moto.mock_s3
 class S3ObjectsMergerTest(unittest.TestCase):
@@ -187,3 +186,18 @@ class S3ObjectsMergerTest(unittest.TestCase):
 
         self.assertEqual(expected_new_object_content, actual_new_object_content)
         self.assertEqual(expected_total_objects_in_bucket, actual_total_objects_in_bucket)
+
+    def test_when_not_found_bucket(self):
+        # Arrange
+        expected_bucket_not_found_message = 'Bucket not found!'
+
+        # Act / Assert
+        objects_merger = S3ObjectsMerger()
+        with self.assertRaises(BucketNotFoundException) as context:
+            objects_merger.merge(bucket_name='not_found_bucket',
+                                 new_object_key='legal.txt',
+                                 objects_to_merge_initial_name='part-',
+                                 objects_to_merge_prefix='')
+
+        actual_bucket_not_found_message = str(context.exception)
+        self.assertEqual(expected_bucket_not_found_message, actual_bucket_not_found_message)

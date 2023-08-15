@@ -1,6 +1,7 @@
-from io import BytesIO
+import boto3
 
-import boto3 as boto3
+from botocore.exceptions import ClientError
+from io import BytesIO
 
 BODY = 'Body'
 CONTENTS = 'Contents'
@@ -14,6 +15,8 @@ class S3ObjectsMerger:
 
     def merge(self, bucket_name: str, new_object_key: str, objects_to_merge_initial_name: str,
               objects_to_merge_prefix=''):
+
+        self.__check_if_bucket_exists(bucket_name)
 
         client = boto3.client('s3')
         objects = client.list_objects_v2(Bucket=bucket_name, Prefix=objects_to_merge_prefix)
@@ -39,6 +42,15 @@ class S3ObjectsMerger:
             client.close()
 
     @staticmethod
+    def __check_if_bucket_exists(bucket_name):
+        try:
+            boto3.resource('s3').meta.client.head_bucket(Bucket=bucket_name)
+        except ClientError as e:
+            error_code = e.response['Error']['Code']
+            if error_code == '404':
+                raise BucketNotFoundException('Bucket not found!')
+
+    @staticmethod
     def __merge_objects_line_by_line(object_to_merge, new_object):
         for object_line_to_merge in object_to_merge[BODY].iter_lines():
             line_to_merge = object_line_to_merge.decode()
@@ -52,3 +64,7 @@ class S3ObjectsMerger:
         for extension in [new_object_extension, 'crc']:
             objects_to_delete.append({KEY: f'{objects_to_merge_prefix}{SUCCESS}{DOT}{extension}'})
         client.delete_objects(Bucket=bucket_name, Delete={'Objects': objects_to_delete})
+
+
+class BucketNotFoundException(Exception):
+    pass
