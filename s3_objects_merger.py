@@ -1,5 +1,6 @@
 import boto3
 
+from botocore.client import BaseClient
 from botocore.exceptions import ClientError
 from io import BytesIO
 
@@ -29,10 +30,10 @@ class S3ObjectsMerger:
 
         if CONTENTS in objects:
             new_object = ''
-            new_object_extension = self.__extract_extension_from_object_key(new_object_key)
+            new_object_extension = self.__extract_object_extension_from_key(new_object_key)
 
             for object_content in objects[CONTENTS]:
-                object_name = self.__extract_name_from_object_key(object_content[KEY])
+                object_name = self.__extract_object_name_from_key(object_content[KEY])
                 object_to_merge_key = f'{objects_to_merge_prefix}{object_name}'
 
                 if object_name.startswith(objects_to_merge_initial_name):
@@ -50,7 +51,7 @@ class S3ObjectsMerger:
             client.close()
 
     @staticmethod
-    def __check_if_bucket_exists(bucket_name):
+    def __check_if_bucket_exists(bucket_name: str):
         try:
             boto3.resource('s3').meta.client.head_bucket(Bucket=bucket_name)
         except ClientError as e:
@@ -59,15 +60,15 @@ class S3ObjectsMerger:
                 raise BucketNotFoundException('Bucket not found!')
 
     @staticmethod
-    def __extract_extension_from_object_key(object_key: str):
+    def __extract_object_extension_from_key(object_key: str) -> str:
         return object_key.split(DOT)[-1]
 
     @staticmethod
-    def __extract_name_from_object_key(object_key: str):
+    def __extract_object_name_from_key(object_key: str) -> str:
         return object_key.split('/')[-1]
 
     @staticmethod
-    def __merge_objects_line_by_line(object_to_merge, new_object):
+    def __merge_objects_line_by_line(object_to_merge: dict, new_object: str) -> str:
         for object_line_to_merge in object_to_merge[BODY].iter_lines():
             line_to_merge = object_line_to_merge.decode()
             new_object += f'{line_to_merge}{LINE_BREAK}'
@@ -75,7 +76,7 @@ class S3ObjectsMerger:
         return new_object
 
     @staticmethod
-    def __delete_success_objects(client, bucket_name, objects_to_merge_prefix):
+    def __delete_success_objects(client: BaseClient, bucket_name: str, objects_to_merge_prefix: str):
         success_objects = [SUCCESS_NO_EXTENSION, SUCCESS_WITH_CRC_EXTENSION]
         for obj in success_objects:
             client.delete_object(Bucket=bucket_name, Key=f'{objects_to_merge_prefix}{obj}')
