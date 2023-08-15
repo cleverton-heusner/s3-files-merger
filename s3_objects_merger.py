@@ -15,8 +15,12 @@ SUCCESS_WITH_CRC_EXTENSION = f'.{SUCCESS_NO_EXTENSION}.crc'
 
 class S3ObjectsMerger:
 
-    def merge(self, bucket_name: str, new_object_key: str, objects_to_merge_initial_name: str,
-              objects_to_merge_prefix=''):
+    def merge(self,
+              bucket_name: str,
+              new_object_key: str,
+              objects_to_merge_initial_name: str,
+              objects_to_merge_prefix='',
+              is_success_files_deletion_enabled=True):
 
         self.__check_if_bucket_exists(bucket_name)
 
@@ -40,7 +44,9 @@ class S3ObjectsMerger:
             with BytesIO(new_object[:-1].encode()) as file_obj:
                 client.upload_fileobj(Bucket=bucket_name, Key=f'{new_object_key}', Fileobj=file_obj)
 
-            self.__delete_success_objects(client, bucket_name, objects_to_merge_prefix)
+            if is_success_files_deletion_enabled:
+                self.__delete_success_objects(client, bucket_name, objects_to_merge_prefix)
+
             client.close()
 
     @staticmethod
