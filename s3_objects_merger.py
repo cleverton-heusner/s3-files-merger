@@ -23,33 +23,32 @@ class S3ObjectsMerger:
               objects_to_merge_prefix='',
               is_success_files_deletion_enabled=True):
 
+        client = boto3.client('s3')
+
         self.__validate_bucket(bucket_name)
         self.__validate_object_key(new_object_key)
+        objects = self.__validate_objects_to_merge_prefix(client, bucket_name, objects_to_merge_prefix)
 
-        client = boto3.client('s3')
-        objects = client.list_objects_v2(Bucket=bucket_name, Prefix=objects_to_merge_prefix)
+        new_object = ''
+        new_object_extension = self.__extract_object_extension_from_key(new_object_key)
 
-        if CONTENTS in objects:
-            new_object = ''
-            new_object_extension = self.__extract_object_extension_from_key(new_object_key)
+        for object_content in objects[CONTENTS]:
+            object_name = self.__extract_object_name_from_key(object_content[KEY])
+            object_to_merge_key = f'{objects_to_merge_prefix}{object_name}'
 
-            for object_content in objects[CONTENTS]:
-                object_name = self.__extract_object_name_from_key(object_content[KEY])
-                object_to_merge_key = f'{objects_to_merge_prefix}{object_name}'
+            if object_name.startswith(objects_to_merge_initial_name):
+                if object_name.endswith(new_object_extension):
+                    object_to_merge = client.get_object(Bucket=bucket_name, Key=object_to_merge_key)
+                    new_object = self.__merge_objects_line_by_line(object_to_merge, new_object)
+                client.delete_object(Bucket=bucket_name, Key=object_to_merge_key)
 
-                if object_name.startswith(objects_to_merge_initial_name):
-                    if object_name.endswith(new_object_extension):
-                        object_to_merge = client.get_object(Bucket=bucket_name, Key=object_to_merge_key)
-                        new_object = self.__merge_objects_line_by_line(object_to_merge, new_object)
-                    client.delete_object(Bucket=bucket_name, Key=object_to_merge_key)
+        with BytesIO(new_object[:-1].encode()) as file_obj:
+            client.upload_fileobj(Bucket=bucket_name, Key=f'{new_object_key}', Fileobj=file_obj)
 
-            with BytesIO(new_object[:-1].encode()) as file_obj:
-                client.upload_fileobj(Bucket=bucket_name, Key=f'{new_object_key}', Fileobj=file_obj)
+        if is_success_files_deletion_enabled:
+            self.__delete_success_objects(client, bucket_name, objects_to_merge_prefix)
 
-            if is_success_files_deletion_enabled:
-                self.__delete_success_objects(client, bucket_name, objects_to_merge_prefix)
-
-            client.close()
+        client.close()
 
     def __validate_bucket(self, bucket_name: str):
         self.__check_if_bucket_name_is_informed(bucket_name)
@@ -75,6 +74,13 @@ class S3ObjectsMerger:
             raise ObjectKeyNotInformedException('Object key not informed!')
 
     @staticmethod
+    def __validate_objects_to_merge_prefix(client: BaseClient, bucket_name: str, objects_to_merge_prefix: str):
+        objects = client.list_objects_v2(Bucket=bucket_name, Prefix=objects_to_merge_prefix)
+        if CONTENTS not in objects:
+            raise PrefixNotFoundException('Prefix not found!')
+        return objects
+
+    @staticmethod
     def __extract_object_extension_from_key(object_key: str) -> str:
         return object_key.split(DOT)[-1]
 
@@ -98,6 +104,10 @@ class S3ObjectsMerger:
 
 
 class BucketNotFoundException(Exception):
+    pass
+
+
+class PrefixNotFoundException(Exception):
     pass
 
 

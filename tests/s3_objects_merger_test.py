@@ -5,7 +5,7 @@ import unittest
 
 from os.path import sep, join, dirname
 from s3_objects_merger import S3ObjectsMerger, BucketNotFoundException, BucketNotInformedException, \
-    ObjectKeyNotInformedException
+    ObjectKeyNotInformedException, PrefixNotFoundException
 
 
 @moto.mock_s3
@@ -230,6 +230,21 @@ class S3ObjectsMergerTest(unittest.TestCase):
 
         actual_bucket_not_found_message = str(context.exception)
         self.assertEqual(expected_bucket_not_found_message, actual_bucket_not_found_message)
+
+    def test_when_prefix_not_found(self):
+        # Arrange
+        expected_prefix_not_found_message = 'Prefix not found!'
+
+        # Act / Assert
+        objects_merger = S3ObjectsMerger()
+        with self.assertRaises(PrefixNotFoundException) as context:
+            objects_merger.merge(bucket_name=S3ObjectsMergerTest.BUCKET_NAME,
+                                 new_object_key='legal.txt',
+                                 objects_to_merge_initial_name='part-',
+                                 objects_to_merge_prefix='not_found_prefix')
+
+        actual_prefix_not_found_message = str(context.exception)
+        self.assertEqual(expected_prefix_not_found_message, actual_prefix_not_found_message)
 
     def test_when_bucket_name_is_empty(self):
         # Arrange
