@@ -4,8 +4,7 @@ import os
 import unittest
 
 from os.path import sep, join, dirname
-from s3_objects_merger import S3ObjectsMerger, BucketNotFoundException, BucketNotInformedException, \
-    ObjectKeyNotInformedException, PrefixNotFoundException
+from s3_objects_merger import S3ObjectsMerger, BucketNotFoundException, PrefixNotFoundException
 
 
 @moto.mock_s3
@@ -252,7 +251,7 @@ class S3ObjectsMergerTest(unittest.TestCase):
 
         # Act / Assert
         objects_merger = S3ObjectsMerger()
-        with self.assertRaises(BucketNotInformedException) as context:
+        with self.assertRaises(ValueError) as context:
             objects_merger.merge(bucket_name='',
                                  new_object_key='legal.txt',
                                  objects_to_merge_initial_name='part-',
@@ -267,7 +266,7 @@ class S3ObjectsMergerTest(unittest.TestCase):
 
         # Act / Assert
         objects_merger = S3ObjectsMerger()
-        with self.assertRaises(ObjectKeyNotInformedException) as context:
+        with self.assertRaises(ValueError) as context:
             objects_merger.merge(bucket_name=S3ObjectsMergerTest.BUCKET_NAME,
                                  new_object_key='',
                                  objects_to_merge_initial_name='part-',

@@ -57,7 +57,7 @@ class S3ObjectsMerger:
     @staticmethod
     def __check_if_bucket_name_is_informed(bucket_name):
         if not bucket_name:
-            raise BucketNotInformedException('Bucket not informed!')
+            raise ValueError('Bucket not informed!')
 
     @staticmethod
     def __check_if_bucket_exists(bucket_name: str):
@@ -71,7 +71,7 @@ class S3ObjectsMerger:
     @staticmethod
     def __validate_object_key(object_key: str):
         if not object_key:
-            raise ObjectKeyNotInformedException('Object key not informed!')
+            raise ValueError('Object key not informed!')
 
     @staticmethod
     def __validate_objects_to_merge_prefix(client: BaseClient, bucket_name: str, objects_to_merge_prefix: str):
@@ -108,12 +108,4 @@ class BucketNotFoundException(Exception):
 
 
 class PrefixNotFoundException(Exception):
-    pass
-
-
-class BucketNotInformedException(Exception):
-    pass
-
-
-class ObjectKeyNotInformedException(Exception):
     pass
