@@ -215,6 +215,42 @@ class S3ObjectsMergerTest(unittest.TestCase):
         self.assertEqual(expected_new_object_content, actual_new_object_content)
         self.assertEqual(expected_total_objects_in_bucket, actual_total_objects_in_bucket)
 
+    def test_when_object_merge_prefix_is_not_ending_with_separator(self):
+        # Arrange
+        dataset_path = f'{S3ObjectsMergerTest.datasets_path}base{sep}'
+        expected_new_object_content = 'hello there\nhi me\nhi two\neai\nhi here'
+        expected_prefix_content = ''
+        expected_total_objects_in_bucket = 2
+
+        sub_folder = 'sub_folder/'
+        new_object_key = 'sub_folder/legal.txt'
+
+        self.s3.put_object(Bucket=S3ObjectsMergerTest.BUCKET_NAME, Key=sub_folder)
+        files_to_send_to_s3 = ['part-00000.txt', 'part-00000.crc', 'part-00001.txt', 'part-00001.crc', '_SUCCESS',
+                               '._SUCCESS.crc']
+        for file in files_to_send_to_s3:
+            with open(f'{dataset_path}{file}', 'rb') as f:
+                self.s3.upload_fileobj(f, S3ObjectsMergerTest.BUCKET_NAME, f'{sub_folder}{file}')
+
+        # Act
+        objects_merger = S3ObjectsMerger()
+        objects_merger.merge(bucket_name=S3ObjectsMergerTest.BUCKET_NAME,
+                             new_object_key=new_object_key,
+                             objects_to_merge_initial_name='part-',
+                             objects_to_merge_prefix='sub_folder')
+
+        # Assert
+        new_object = self.s3.get_object(Bucket=S3ObjectsMergerTest.BUCKET_NAME, Key=new_object_key)
+        actual_new_object_content = new_object['Body'].read().decode('utf-8')
+        self.assertEqual(expected_new_object_content, actual_new_object_content)
+
+        objects_to_merge_sub_folder = self.s3.get_object(Bucket=S3ObjectsMergerTest.BUCKET_NAME, Key=sub_folder)
+        actual_prefix_content = objects_to_merge_sub_folder['Body'].read().decode('utf-8')
+        self.assertEqual(actual_prefix_content, expected_prefix_content)
+
+        actual_total_objects_in_bucket = len(self.s3.list_objects_v2(Bucket=S3ObjectsMergerTest.BUCKET_NAME)['Contents'])
+        self.assertEqual(expected_total_objects_in_bucket, actual_total_objects_in_bucket)
+
     def test_when_bucket_not_found(self):
         # Arrange
         expected_bucket_not_found_message = 'Bucket not found!'
@@ -240,7 +276,7 @@ class S3ObjectsMergerTest(unittest.TestCase):
             objects_merger.merge(bucket_name=S3ObjectsMergerTest.BUCKET_NAME,
                                  new_object_key='legal.txt',
                                  objects_to_merge_initial_name='part-',
-                                 objects_to_merge_prefix='not_found_prefix')
+                                 objects_to_merge_prefix='not_found_prefix/')
 
         actual_prefix_not_found_message = str(context.exception)
         self.assertEqual(expected_prefix_not_found_message, actual_prefix_not_found_message)
