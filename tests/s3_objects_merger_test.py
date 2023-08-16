@@ -4,7 +4,8 @@ import os
 import unittest
 
 from os.path import sep, join, dirname
-from s3_objects_merger import S3ObjectsMerger, BucketNotFoundException
+from s3_objects_merger import S3ObjectsMerger, BucketNotFoundException, BucketNotInformedException, \
+    ObjectKeyNotInformedException
 
 
 @moto.mock_s3
@@ -215,7 +216,7 @@ class S3ObjectsMergerTest(unittest.TestCase):
         self.assertEqual(expected_new_object_content, actual_new_object_content)
         self.assertEqual(expected_total_objects_in_bucket, actual_total_objects_in_bucket)
 
-    def test_when_not_found_bucket(self):
+    def test_when_bucket_not_found(self):
         # Arrange
         expected_bucket_not_found_message = 'Bucket not found!'
 
@@ -229,3 +230,33 @@ class S3ObjectsMergerTest(unittest.TestCase):
 
         actual_bucket_not_found_message = str(context.exception)
         self.assertEqual(expected_bucket_not_found_message, actual_bucket_not_found_message)
+
+    def test_when_bucket_name_is_empty(self):
+        # Arrange
+        expected_bucket_not_informed_message = 'Bucket not informed!'
+
+        # Act / Assert
+        objects_merger = S3ObjectsMerger()
+        with self.assertRaises(BucketNotInformedException) as context:
+            objects_merger.merge(bucket_name='',
+                                 new_object_key='legal.txt',
+                                 objects_to_merge_initial_name='part-',
+                                 objects_to_merge_prefix='')
+
+        actual_bucket_not_informed_message = str(context.exception)
+        self.assertEqual(expected_bucket_not_informed_message, actual_bucket_not_informed_message)
+
+    def test_when_object_key_is_empty(self):
+        # Arrange
+        expected_object_key_not_informed_message = 'Object key not informed!'
+
+        # Act / Assert
+        objects_merger = S3ObjectsMerger()
+        with self.assertRaises(ObjectKeyNotInformedException) as context:
+            objects_merger.merge(bucket_name=S3ObjectsMergerTest.BUCKET_NAME,
+                                 new_object_key='',
+                                 objects_to_merge_initial_name='part-',
+                                 objects_to_merge_prefix='')
+
+        actual_object_key_not_informed_message = str(context.exception)
+        self.assertEqual(expected_object_key_not_informed_message, actual_object_key_not_informed_message)

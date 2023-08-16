@@ -23,7 +23,8 @@ class S3ObjectsMerger:
               objects_to_merge_prefix='',
               is_success_files_deletion_enabled=True):
 
-        self.__check_if_bucket_exists(bucket_name)
+        self.__validate_bucket(bucket_name)
+        self.__validate_object_key(new_object_key)
 
         client = boto3.client('s3')
         objects = client.list_objects_v2(Bucket=bucket_name, Prefix=objects_to_merge_prefix)
@@ -50,6 +51,15 @@ class S3ObjectsMerger:
 
             client.close()
 
+    def __validate_bucket(self, bucket_name: str):
+        self.__check_if_bucket_name_is_informed(bucket_name)
+        self.__check_if_bucket_exists(bucket_name)
+
+    @staticmethod
+    def __check_if_bucket_name_is_informed(bucket_name):
+        if not bucket_name:
+            raise BucketNotInformedException('Bucket not informed!')
+
     @staticmethod
     def __check_if_bucket_exists(bucket_name: str):
         try:
@@ -58,6 +68,11 @@ class S3ObjectsMerger:
             error_code = e.response['Error']['Code']
             if error_code == '404':
                 raise BucketNotFoundException('Bucket not found!')
+
+    @staticmethod
+    def __validate_object_key(object_key: str):
+        if not object_key:
+            raise ObjectKeyNotInformedException('Object key not informed!')
 
     @staticmethod
     def __extract_object_extension_from_key(object_key: str) -> str:
@@ -83,4 +98,12 @@ class S3ObjectsMerger:
 
 
 class BucketNotFoundException(Exception):
+    pass
+
+
+class BucketNotInformedException(Exception):
+    pass
+
+
+class ObjectKeyNotInformedException(Exception):
     pass
