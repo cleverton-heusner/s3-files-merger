@@ -66,7 +66,7 @@ class S3ObjectsMerger:
         except ClientError as e:
             error_code = e.response['Error']['Code']
             if error_code == '404':
-                raise BucketNotFoundException('Bucket not found!')
+                raise BucketNotFoundException()
 
     @staticmethod
     def __validate_object_key(object_key: str):
@@ -77,7 +77,7 @@ class S3ObjectsMerger:
     def __validate_objects_to_merge_prefix(client: BaseClient, bucket_name: str, objects_to_merge_prefix: str):
         objects = client.list_objects_v2(Bucket=bucket_name, Prefix=objects_to_merge_prefix)
         if CONTENTS not in objects:
-            raise PrefixNotFoundException('Prefix not found!')
+            raise ObjectNotFoundException('Prefix not found!')
         return objects
 
     @staticmethod
@@ -104,8 +104,9 @@ class S3ObjectsMerger:
 
 
 class BucketNotFoundException(Exception):
-    pass
+    def __init__(self):
+        super().__init__('Bucket not found!')
 
 
-class PrefixNotFoundException(Exception):
+class ObjectNotFoundException(Exception):
     pass
