@@ -45,10 +45,7 @@ class S3FilesMerger:
         files_to_merge = self.__validate_files_to_merge_path()
 
         new_file_extension = self.__extract_file_extension_from_key()
-        new_file = self.__merge_files(files_to_merge, new_file_extension)
-
-        new_file_without_last_blank_line = new_file[:-1]
-        self.__upload_file_to_bucket(new_file_without_last_blank_line)
+        self.__merge_files(files_to_merge, new_file_extension)
 
         if self.__is_success_files_deletion_enabled:
             self.__delete_success_files()
@@ -110,6 +107,11 @@ class S3FilesMerger:
                 if file_name.endswith(new_file_extension):
                     file_to_merge = self.__client.get_object(Bucket=self.__bucket_name, Key=file_to_merge_key)
                     new_file = self.__merge_files_line_by_line(file_to_merge, new_file)
+
+                    if file_content == files_to_merge[CONTENTS][-1]:
+                        new_file = new_file[:-1]
+
+                    self.__upload_file_to_bucket(new_file)
 
                 if self.__is_files_to_merge_deletion_enabled:
                     self.__client.delete_object(Bucket=self.__bucket_name, Key=file_to_merge_key)
