@@ -37,11 +37,11 @@ class S3FilesMergerTest(unittest.TestCase):
                 self.s3.upload_fileobj(f, S3FilesMergerTest.BUCKET_NAME, file)
 
         # Act
-        s3_files_merger = S3FilesMerger()
-        s3_files_merger.merge(bucket_name=S3FilesMergerTest.BUCKET_NAME,
-                              file_name_with_extension='legal.txt',
-                              files_to_merge_initial_name='part-',
-                              files_to_merge_path='')
+        s3_files_merger = S3FilesMerger(bucket_name=S3FilesMergerTest.BUCKET_NAME,
+                                        file_name_with_extension='legal.txt',
+                                        files_to_merge_initial_name='part-',
+                                        files_to_merge_path='')
+        s3_files_merger.merge()
 
         # Assert
         new_file = self.s3.get_object(Bucket=S3FilesMergerTest.BUCKET_NAME, Key='legal.txt')
@@ -69,11 +69,11 @@ class S3FilesMergerTest(unittest.TestCase):
                 self.s3.upload_fileobj(f, S3FilesMergerTest.BUCKET_NAME, file)
 
         # Act
-        s3_files_merger = S3FilesMerger()
-        s3_files_merger.merge(bucket_name=S3FilesMergerTest.BUCKET_NAME,
-                              file_name_with_extension=new_file_key,
-                              files_to_merge_initial_name='part-',
-                              files_to_merge_path='')
+        s3_files_merger = S3FilesMerger(bucket_name=S3FilesMergerTest.BUCKET_NAME,
+                                        file_name_with_extension=new_file_key,
+                                        files_to_merge_initial_name='part-',
+                                        files_to_merge_path='')
+        s3_files_merger.merge()
 
         # Assert
         new_file = self.s3.get_object(Bucket=S3FilesMergerTest.BUCKET_NAME, Key=new_file_key)
@@ -105,11 +105,11 @@ class S3FilesMergerTest(unittest.TestCase):
                 self.s3.upload_fileobj(f, S3FilesMergerTest.BUCKET_NAME, f'{files_to_merge_sub_folder}{file}')
 
         # Act
-        s3_files_merger = S3FilesMerger()
-        s3_files_merger.merge(bucket_name=S3FilesMergerTest.BUCKET_NAME,
-                              file_name_with_extension=new_file_key,
-                              files_to_merge_initial_name='part-',
-                              files_to_merge_path=files_to_merge_sub_folder)
+        s3_files_merger = S3FilesMerger(bucket_name=S3FilesMergerTest.BUCKET_NAME,
+                                        file_name_with_extension=new_file_key,
+                                        files_to_merge_initial_name='part-',
+                                        files_to_merge_path=files_to_merge_sub_folder)
+        s3_files_merger.merge()
 
         # Assert
         new_file = self.s3.get_object(Bucket=S3FilesMergerTest.BUCKET_NAME, Key=new_file_key)
@@ -142,11 +142,11 @@ class S3FilesMergerTest(unittest.TestCase):
                 self.s3.upload_fileobj(f, S3FilesMergerTest.BUCKET_NAME, f'{sub_folder}{file}')
 
         # Act
-        s3_files_merger = S3FilesMerger()
-        s3_files_merger.merge(bucket_name=S3FilesMergerTest.BUCKET_NAME,
-                              file_name_with_extension=new_file_key,
-                              files_to_merge_initial_name='part-',
-                              files_to_merge_path=sub_folder)
+        s3_files_merger = S3FilesMerger(bucket_name=S3FilesMergerTest.BUCKET_NAME,
+                                        file_name_with_extension=new_file_key,
+                                        files_to_merge_initial_name='part-',
+                                        files_to_merge_path=sub_folder)
+        s3_files_merger.merge()
 
         # Assert
         new_file = self.s3.get_object(Bucket=S3FilesMergerTest.BUCKET_NAME, Key=new_file_key)
@@ -173,11 +173,11 @@ class S3FilesMergerTest(unittest.TestCase):
                 self.s3.upload_fileobj(f, S3FilesMergerTest.BUCKET_NAME, file)
 
         # Act
-        s3_files_merger = S3FilesMerger()
-        s3_files_merger.merge(bucket_name=S3FilesMergerTest.BUCKET_NAME,
-                              file_name_with_extension='legal.txt',
-                              files_to_merge_initial_name='part-',
-                              files_to_merge_path='')
+        s3_files_merger = S3FilesMerger(bucket_name=S3FilesMergerTest.BUCKET_NAME,
+                                        file_name_with_extension='legal.txt',
+                                        files_to_merge_initial_name='part-',
+                                        files_to_merge_path='')
+        s3_files_merger.merge()
 
         # Assert
         new_file = self.s3.get_object(Bucket=S3FilesMergerTest.BUCKET_NAME, Key='legal.txt')
@@ -200,12 +200,12 @@ class S3FilesMergerTest(unittest.TestCase):
                 self.s3.upload_fileobj(f, S3FilesMergerTest.BUCKET_NAME, file)
 
         # Act
-        s3_files_merger = S3FilesMerger()
-        s3_files_merger.merge(bucket_name=S3FilesMergerTest.BUCKET_NAME,
-                              file_name_with_extension='legal.txt',
-                              files_to_merge_initial_name='part-',
-                              files_to_merge_path='',
-                              is_success_files_deletion_enabled=False)
+        s3_files_merger = S3FilesMerger(bucket_name=S3FilesMergerTest.BUCKET_NAME,
+                                        file_name_with_extension='legal.txt',
+                                        files_to_merge_initial_name='part-',
+                                        files_to_merge_path='',
+                                        is_success_files_deletion_enabled=False)
+        s3_files_merger.merge()
 
         # Assert
         new_file = self.s3.get_object(Bucket=S3FilesMergerTest.BUCKET_NAME, Key='legal.txt')
@@ -233,11 +233,11 @@ class S3FilesMergerTest(unittest.TestCase):
                 self.s3.upload_fileobj(f, S3FilesMergerTest.BUCKET_NAME, f'{sub_folder}{file}')
 
         # Act
-        s3_files_merger = S3FilesMerger()
-        s3_files_merger.merge(bucket_name=S3FilesMergerTest.BUCKET_NAME,
-                              file_name_with_extension=new_file_key,
-                              files_to_merge_initial_name='part-',
-                              files_to_merge_path='sub_folder')
+        s3_files_merger = S3FilesMerger(bucket_name=S3FilesMergerTest.BUCKET_NAME,
+                                        file_name_with_extension=new_file_key,
+                                        files_to_merge_initial_name='part-',
+                                        files_to_merge_path='sub_folder')
+        s3_files_merger.merge()
 
         # Assert
         new_file = self.s3.get_object(Bucket=S3FilesMergerTest.BUCKET_NAME, Key=new_file_key)
@@ -264,12 +264,12 @@ class S3FilesMergerTest(unittest.TestCase):
                 self.s3.upload_fileobj(f, S3FilesMergerTest.BUCKET_NAME, file)
 
         # Act
-        s3_files_merger = S3FilesMerger()
-        s3_files_merger.merge(bucket_name=S3FilesMergerTest.BUCKET_NAME,
-                              file_name_with_extension='legal.txt',
-                              files_to_merge_initial_name='part-',
-                              files_to_merge_path='',
-                              is_files_to_merge_deletion_enabled=False)
+        s3_files_merger = S3FilesMerger(bucket_name=S3FilesMergerTest.BUCKET_NAME,
+                                        file_name_with_extension='legal.txt',
+                                        files_to_merge_initial_name='part-',
+                                        files_to_merge_path='',
+                                        is_files_to_merge_deletion_enabled=False)
+        s3_files_merger.merge()
 
         # Assert
         new_file = self.s3.get_object(Bucket=S3FilesMergerTest.BUCKET_NAME, Key='legal.txt')
@@ -284,12 +284,12 @@ class S3FilesMergerTest(unittest.TestCase):
         expected_bucket_not_found_message = 'Bucket not found!'
 
         # Act / Assert
-        s3_files_merger = S3FilesMerger()
+        s3_files_merger = S3FilesMerger(bucket_name='not_found_bucket',
+                                        file_name_with_extension='legal.txt',
+                                        files_to_merge_initial_name='part-',
+                                        files_to_merge_path='')
         with self.assertRaises(BucketNotFoundException) as context:
-            s3_files_merger.merge(bucket_name='not_found_bucket',
-                                  file_name_with_extension='legal.txt',
-                                  files_to_merge_initial_name='part-',
-                                  files_to_merge_path='')
+            s3_files_merger.merge()
 
         actual_bucket_not_found_message = str(context.exception)
         self.assertEqual(expected_bucket_not_found_message, actual_bucket_not_found_message)
@@ -299,12 +299,12 @@ class S3FilesMergerTest(unittest.TestCase):
         expected_files_to_merge_path_not_found_message = 'Files to merge path not found!'
 
         # Act / Assert
-        s3_files_merger = S3FilesMerger()
+        s3_files_merger = S3FilesMerger(bucket_name=S3FilesMergerTest.BUCKET_NAME,
+                                        file_name_with_extension='legal.txt',
+                                        files_to_merge_initial_name='part-',
+                                        files_to_merge_path='not_found_path/')
         with self.assertRaises(FileNotFoundException) as context:
-            s3_files_merger.merge(bucket_name=S3FilesMergerTest.BUCKET_NAME,
-                                  file_name_with_extension='legal.txt',
-                                  files_to_merge_initial_name='part-',
-                                  files_to_merge_path='not_found_path/')
+            s3_files_merger.merge()
 
         actual_files_to_merge_path_not_found_message = str(context.exception)
         self.assertEqual(expected_files_to_merge_path_not_found_message, actual_files_to_merge_path_not_found_message)
@@ -322,12 +322,12 @@ class S3FilesMergerTest(unittest.TestCase):
                 self.s3.upload_fileobj(f, S3FilesMergerTest.BUCKET_NAME, file)
 
         # Act / Assert
-        s3_files_merger = S3FilesMerger()
+        s3_files_merger = S3FilesMerger(bucket_name=S3FilesMergerTest.BUCKET_NAME,
+                                        file_name_with_extension='legal.txt',
+                                        files_to_merge_initial_name='not-existing-initial-name',
+                                        files_to_merge_path='')
         with self.assertRaises(FileNotFoundException) as context:
-            s3_files_merger.merge(bucket_name=S3FilesMergerTest.BUCKET_NAME,
-                                  file_name_with_extension='legal.txt',
-                                  files_to_merge_initial_name='not-existing-initial-name',
-                                  files_to_merge_path='')
+            s3_files_merger.merge()
 
         actual_not_existing_initial_name_message = str(context.exception)
         self.assertEqual(expected_not_existing_initial_name_message, actual_not_existing_initial_name_message)
@@ -337,12 +337,12 @@ class S3FilesMergerTest(unittest.TestCase):
         expected_bucket_not_informed_message = 'Bucket not informed!'
 
         # Act / Assert
-        s3_files_merger = S3FilesMerger()
+        s3_files_merger = S3FilesMerger(bucket_name='',
+                                        file_name_with_extension='legal.txt',
+                                        files_to_merge_initial_name='part-',
+                                        files_to_merge_path='')
         with self.assertRaises(ValueError) as context:
-            s3_files_merger.merge(bucket_name='',
-                                  file_name_with_extension='legal.txt',
-                                  files_to_merge_initial_name='part-',
-                                  files_to_merge_path='')
+            s3_files_merger.merge()
 
         actual_bucket_not_informed_message = str(context.exception)
         self.assertEqual(expected_bucket_not_informed_message, actual_bucket_not_informed_message)
@@ -352,12 +352,12 @@ class S3FilesMergerTest(unittest.TestCase):
         expected_file_key_not_informed_message = 'File key not informed!'
 
         # Act / Assert
-        s3_files_merger = S3FilesMerger()
+        s3_files_merger = S3FilesMerger(bucket_name=S3FilesMergerTest.BUCKET_NAME,
+                                        file_name_with_extension='',
+                                        files_to_merge_initial_name='part-',
+                                        files_to_merge_path='')
         with self.assertRaises(ValueError) as context:
-            s3_files_merger.merge(bucket_name=S3FilesMergerTest.BUCKET_NAME,
-                                  file_name_with_extension='',
-                                  files_to_merge_initial_name='part-',
-                                  files_to_merge_path='')
+            s3_files_merger.merge()
 
         actual_key_key_not_informed_message = str(context.exception)
         self.assertEqual(expected_file_key_not_informed_message, actual_key_key_not_informed_message)

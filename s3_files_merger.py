@@ -18,34 +18,31 @@ SUCCESS_WITH_CRC_EXTENSION = f'.{SUCCESS_NO_EXTENSION}.crc'
 
 class S3FilesMerger:
 
-    def __init__(self):
+    def __init__(self,
+                 bucket_name,
+                 file_name_with_extension,
+                 files_to_merge_initial_name,
+                 files_to_merge_path=BUCKET_ROOT,
+                 is_success_files_deletion_enabled=True,
+                 is_files_to_merge_deletion_enabled=True,
+                 file_chunk_size_in_mb=10):
+
         self.__client = None
-        self.__bucket_name = None
-        self.__new_file_key = None
-        self.__files_to_merge_initial_name = None
-        self.__files_to_merge_path = None
-        self.__is_success_files_deletion_enabled = None
-        self.__is_files_to_merge_deletion_enabled = None
-        self.__file_chunk_size_in_mb = None
-
-    def merge(self,
-              bucket_name: str,
-              file_name_with_extension: str,
-              files_to_merge_initial_name: str,
-              files_to_merge_path=BUCKET_ROOT,
-              is_success_files_deletion_enabled=True,
-              is_files_to_merge_deletion_enabled=True,
-              file_chunk_size_in_mb=10):
-
-        self.__client = boto3.client('s3')
+        self.__bucket_name = bucket_name
+        self.__new_file_key = file_name_with_extension
         self.__files_to_merge_initial_name = files_to_merge_initial_name
-        self.__bucket_name = self.__validate_bucket(bucket_name)
-        self.__new_file_key = self.__validate_file_key(file_name_with_extension)
+        self.__files_to_merge_path = files_to_merge_path
         self.__is_success_files_deletion_enabled = is_success_files_deletion_enabled
         self.__is_files_to_merge_deletion_enabled = is_files_to_merge_deletion_enabled
         self.__file_chunk_size_in_mb = file_chunk_size_in_mb
 
-        self.__add_separator_to_path_if_absent(files_to_merge_path)
+    def merge(self):
+        self.__client = boto3.client('s3')
+
+        self.__validate_bucket()
+        self.__validate_file_key()
+
+        self.__add_separator_to_path_if_absent()
         files_to_merge = self.__validate_files_to_merge_path()
 
         new_file_extension = self.__extract_file_extension_from_key()
@@ -56,11 +53,9 @@ class S3FilesMerger:
 
         self.__client.close()
 
-    def __validate_bucket(self, bucket_name: str):
-        self.__check_if_bucket_name_is_informed(bucket_name)
-        self.__check_if_bucket_exists(bucket_name)
-
-        return bucket_name
+    def __validate_bucket(self):
+        self.__check_if_bucket_name_is_informed(self.__bucket_name)
+        self.__check_if_bucket_exists(self.__bucket_name)
 
     @staticmethod
     def __check_if_bucket_name_is_informed(bucket_name):
@@ -76,17 +71,14 @@ class S3FilesMerger:
             if error_code == '404':
                 raise BucketNotFoundException()
 
-    @staticmethod
-    def __validate_file_key(new_file_key: str):
-        if not new_file_key:
+    def __validate_file_key(self):
+        if not self.__new_file_key:
             raise ValueError('File key not informed!')
 
-        return new_file_key
-
-    def __add_separator_to_path_if_absent(self, files_to_merge_path: str):
-        self.__files_to_merge_path = f'{files_to_merge_path}{PATH_SEPARATOR}' \
-            if files_to_merge_path and not files_to_merge_path.endswith(PATH_SEPARATOR) \
-            else files_to_merge_path
+    def __add_separator_to_path_if_absent(self):
+        self.__files_to_merge_path = f'{self.__files_to_merge_path}{PATH_SEPARATOR}' \
+            if self.__files_to_merge_path and not self.__files_to_merge_path.endswith(PATH_SEPARATOR) \
+            else self.__files_to_merge_path
 
     def __validate_files_to_merge_path(self):
         paths = self.__client.list_objects_v2(Bucket=self.__bucket_name, Prefix=self.__files_to_merge_path)
