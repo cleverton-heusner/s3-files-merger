@@ -98,13 +98,13 @@ class S3FilesMerger:
         total_files_to_merge_with_initial_name = 0
 
         for file_content in files_to_merge[CONTENTS]:
-            file_name = self.__extract_file_name_from_key(file_content[KEY])
-            file_to_merge_key = f'{self.__files_to_merge_path}{file_name}'
+            file_to_merge_name = self.__extract_file_name_from_key(file_content[KEY])
+            file_to_merge_key = f'{self.__files_to_merge_path}{file_to_merge_name}'
 
-            if file_name.startswith(self.__files_to_merge_initial_name):
+            if file_to_merge_name.startswith(self.__files_to_merge_initial_name):
                 total_files_to_merge_with_initial_name += 1
 
-                if file_name.endswith(new_file_extension):
+                if file_to_merge_name.endswith(new_file_extension):
                     file_to_merge = self.__client.get_object(Bucket=self.__bucket_name, Key=file_to_merge_key)
                     new_file = self.__merge_files_line_by_line(file_to_merge, new_file)
 
