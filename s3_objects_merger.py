@@ -93,16 +93,23 @@ class S3ObjectsMerger:
 
     def __merge_objects(self, objects_to_merge, new_object_extension):
         new_object = ''
+        total_objects_to_merge_with_initial_name = 0
 
         for object_content in objects_to_merge[CONTENTS]:
             object_name = self.__extract_object_name_from_key(object_content[KEY])
             object_to_merge_key = f'{self.__objects_to_merge_prefix}{object_name}'
 
             if object_name.startswith(self.__objects_to_merge_initial_name):
+                total_objects_to_merge_with_initial_name += 1
+
                 if object_name.endswith(new_object_extension):
                     object_to_merge = self.__client.get_object(Bucket=self.__bucket_name, Key=object_to_merge_key)
                     new_object = self.__merge_objects_line_by_line(object_to_merge, new_object)
                 self.__client.delete_object(Bucket=self.__bucket_name, Key=object_to_merge_key)
+
+        if not total_objects_to_merge_with_initial_name:
+            raise ObjectNotFoundException(f'Objects to merge not found with the initial name '
+                                          f'"{self.__objects_to_merge_initial_name}"!')
 
         return new_object
 

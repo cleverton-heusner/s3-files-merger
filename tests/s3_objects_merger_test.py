@@ -281,6 +281,29 @@ class S3ObjectsMergerTest(unittest.TestCase):
         actual_prefix_not_found_message = str(context.exception)
         self.assertEqual(expected_prefix_not_found_message, actual_prefix_not_found_message)
 
+    def test_when_not_found_objects_to_merge_with_initial_name_informed(self):
+        # Arrange
+        dataset_path = f'{S3ObjectsMergerTest.datasets_path}base{sep}'
+        expected_not_existing_initial_name_message = 'Objects to merge not found with the initial name ' \
+                                                     '"not-existing-initial-name"!'
+
+        files_to_send_to_s3 = ['part-00000.txt', 'part-00000.crc', 'part-00001.txt', 'part-00001.crc', '_SUCCESS',
+                               '._SUCCESS.crc']
+        for file in files_to_send_to_s3:
+            with open(f'{dataset_path}{file}', 'rb') as f:
+                self.s3.upload_fileobj(f, S3ObjectsMergerTest.BUCKET_NAME, file)
+
+        # Act / Assert
+        objects_merger = S3ObjectsMerger()
+        with self.assertRaises(ObjectNotFoundException) as context:
+            objects_merger.merge(bucket_name=S3ObjectsMergerTest.BUCKET_NAME,
+                                 new_object_key='legal.txt',
+                                 objects_to_merge_initial_name='not-existing-initial-name',
+                                 objects_to_merge_prefix='')
+
+        actual_not_existing_initial_name_message = str(context.exception)
+        self.assertEqual(expected_not_existing_initial_name_message, actual_not_existing_initial_name_message)
+
     def test_when_bucket_name_is_empty(self):
         # Arrange
         expected_bucket_not_informed_message = 'Bucket not informed!'
