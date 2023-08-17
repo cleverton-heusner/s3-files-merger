@@ -251,6 +251,34 @@ class S3FilesMergerTest(unittest.TestCase):
         actual_total_files_in_bucket = len(self.s3.list_objects_v2(Bucket=S3FilesMergerTest.BUCKET_NAME)['Contents'])
         self.assertEqual(expected_total_files_in_bucket, actual_total_files_in_bucket)
 
+    def test_when_files_to_merge_must_not_be_deleted_after_merge(self):
+        # Arrange
+        dataset_path = f'{S3FilesMergerTest.datasets_path}base{sep}'
+        expected_new_file_content = 'hello there\nhi me\nhi two\neai\nhi here'
+        expected_total_files_in_bucket = 5
+
+        files_to_send_to_s3 = ['part-00000.txt', 'part-00000.crc', 'part-00001.txt', 'part-00001.crc', '_SUCCESS',
+                               '._SUCCESS.crc']
+        for file in files_to_send_to_s3:
+            with open(f'{dataset_path}{file}', 'rb') as f:
+                self.s3.upload_fileobj(f, S3FilesMergerTest.BUCKET_NAME, file)
+
+        # Act
+        s3_files_merger = S3FilesMerger()
+        s3_files_merger.merge(bucket_name=S3FilesMergerTest.BUCKET_NAME,
+                              file_name_with_extension='legal.txt',
+                              files_to_merge_initial_name='part-',
+                              files_to_merge_path='',
+                              is_files_to_merge_deletion_enabled=False)
+
+        # Assert
+        new_file = self.s3.get_object(Bucket=S3FilesMergerTest.BUCKET_NAME, Key='legal.txt')
+        actual_new_file_content = new_file['Body'].read().decode('utf-8')
+        actual_total_files_in_bucket = len(self.s3.list_objects_v2(Bucket=S3FilesMergerTest.BUCKET_NAME)['Contents'])
+
+        self.assertEqual(expected_new_file_content, actual_new_file_content)
+        self.assertEqual(expected_total_files_in_bucket, actual_total_files_in_bucket)
+
     def test_when_bucket_not_found(self):
         # Arrange
         expected_bucket_not_found_message = 'Bucket not found!'

@@ -23,18 +23,23 @@ class S3FilesMerger:
         self.__new_file_key = None
         self.__files_to_merge_initial_name = None
         self.__files_to_merge_path = None
+        self.__is_success_files_deletion_enabled = None
+        self.__is_files_to_merge_deletion_enabled = None
 
     def merge(self,
               bucket_name: str,
               file_name_with_extension: str,
               files_to_merge_initial_name: str,
               files_to_merge_path=BUCKET_ROOT,
-              is_success_files_deletion_enabled=True):
+              is_success_files_deletion_enabled=True,
+              is_files_to_merge_deletion_enabled=True):
 
         self.__client = boto3.client('s3')
         self.__files_to_merge_initial_name = files_to_merge_initial_name
         self.__bucket_name = self.__validate_bucket(bucket_name)
         self.__new_file_key = self.__validate_file_key(file_name_with_extension)
+        self.__is_success_files_deletion_enabled = is_success_files_deletion_enabled
+        self.__is_files_to_merge_deletion_enabled = is_files_to_merge_deletion_enabled
 
         self.__add_separator_to_path_if_absent(files_to_merge_path)
         files_to_merge = self.__validate_files_to_merge_path()
@@ -45,7 +50,7 @@ class S3FilesMerger:
         new_file_without_last_blank_line = new_file[:-1]
         self.__upload_file_to_bucket(new_file_without_last_blank_line)
 
-        if is_success_files_deletion_enabled:
+        if self.__is_success_files_deletion_enabled:
             self.__delete_success_files()
 
         self.__client.close()
@@ -105,7 +110,9 @@ class S3FilesMerger:
                 if file_name.endswith(new_file_extension):
                     file_to_merge = self.__client.get_object(Bucket=self.__bucket_name, Key=file_to_merge_key)
                     new_file = self.__merge_files_line_by_line(file_to_merge, new_file)
-                self.__client.delete_object(Bucket=self.__bucket_name, Key=file_to_merge_key)
+
+                if self.__is_files_to_merge_deletion_enabled:
+                    self.__client.delete_object(Bucket=self.__bucket_name, Key=file_to_merge_key)
 
         if not total_files_to_merge_with_initial_name:
             raise FileNotFoundException(f'Files to merge not found with the initial name '
