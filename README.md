@@ -1,1 +1,1 @@
-# s3_objects_merger
+# s3_files_merger
