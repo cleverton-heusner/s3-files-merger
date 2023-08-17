@@ -1,4 +1,5 @@
 import boto3
+from boto3.s3.transfer import TransferConfig
 
 from botocore.exceptions import ClientError
 from io import BytesIO
@@ -25,6 +26,7 @@ class S3FilesMerger:
         self.__files_to_merge_path = None
         self.__is_success_files_deletion_enabled = None
         self.__is_files_to_merge_deletion_enabled = None
+        self.__file_chunk_size_in_mb = None
 
     def merge(self,
               bucket_name: str,
@@ -32,7 +34,8 @@ class S3FilesMerger:
               files_to_merge_initial_name: str,
               files_to_merge_path=BUCKET_ROOT,
               is_success_files_deletion_enabled=True,
-              is_files_to_merge_deletion_enabled=True):
+              is_files_to_merge_deletion_enabled=True,
+              file_chunk_size_in_mb=10):
 
         self.__client = boto3.client('s3')
         self.__files_to_merge_initial_name = files_to_merge_initial_name
@@ -40,6 +43,7 @@ class S3FilesMerger:
         self.__new_file_key = self.__validate_file_key(file_name_with_extension)
         self.__is_success_files_deletion_enabled = is_success_files_deletion_enabled
         self.__is_files_to_merge_deletion_enabled = is_files_to_merge_deletion_enabled
+        self.__file_chunk_size_in_mb = file_chunk_size_in_mb
 
         self.__add_separator_to_path_if_absent(files_to_merge_path)
         files_to_merge = self.__validate_files_to_merge_path()
@@ -135,8 +139,12 @@ class S3FilesMerger:
         return new_file
 
     def __upload_file_to_bucket(self, new_file: str):
+        transfer_config = TransferConfig(multipart_threshold=self.__file_chunk_size_in_mb,
+                                         multipart_chunksize=self.__file_chunk_size_in_mb)
+
         with BytesIO(new_file.encode()) as f:
-            self.__client.upload_fileobj(Bucket=self.__bucket_name, Key=f'{self.__new_file_key}', Fileobj=f)
+            self.__client.upload_fileobj(Bucket=self.__bucket_name, Key=f'{self.__new_file_key}', Fileobj=f,
+                                         Config=transfer_config)
 
     def __delete_success_files(self):
         success_files = [SUCCESS_NO_EXTENSION, SUCCESS_WITH_CRC_EXTENSION]
