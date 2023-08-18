@@ -20,33 +20,33 @@ class S3FilesMerger:
 
     def __init__(self,
                  bucket_name,
-                 file_name_with_extension,
+                 merged_file_full_filename,
                  files_to_merge_initial_name,
-                 files_to_merge_path=BUCKET_ROOT,
+                 files_to_merge_full_path=BUCKET_ROOT,
                  is_success_files_deletion_enabled=True,
                  is_files_to_merge_deletion_enabled=True,
-                 file_chunk_size_in_mb=10):
+                 merged_file_chunk_size_in_mb=10):
 
         self.__client = None
         self.__bucket_name = bucket_name
-        self.__new_file_key = file_name_with_extension
+        self.__merged_file_full_filename = merged_file_full_filename
         self.__files_to_merge_initial_name = files_to_merge_initial_name
-        self.__files_to_merge_path = files_to_merge_path
+        self.__files_to_merge_full_path = files_to_merge_full_path
         self.__is_success_files_deletion_enabled = is_success_files_deletion_enabled
         self.__is_files_to_merge_deletion_enabled = is_files_to_merge_deletion_enabled
-        self.__file_chunk_size_in_mb = file_chunk_size_in_mb
+        self.__merged_file_chunk_size_in_mb = merged_file_chunk_size_in_mb
 
     def merge(self):
         self.__client = boto3.client('s3')
 
         self.__validate_bucket()
-        self.__validate_file_key()
+        self.__validate_merged_file_full_filename()
 
-        self.__add_separator_to_path_if_absent()
+        self.__add_separator_to_files_to_merge_path_if_absent()
         files_to_merge = self.__validate_files_to_merge_path()
 
-        new_file_extension = self.__extract_file_extension_from_key()
-        self.__merge_files(files_to_merge, new_file_extension)
+        merged_file_extension = self.__extract_extension_from_full_filename()
+        self.__merge_files(files_to_merge, merged_file_extension)
 
         if self.__is_success_files_deletion_enabled:
             self.__delete_success_files()
@@ -71,77 +71,77 @@ class S3FilesMerger:
             if error_code == '404':
                 raise BucketNotFoundException()
 
-    def __validate_file_key(self):
-        if not self.__new_file_key:
-            raise ValueError('File key not informed!')
+    def __validate_merged_file_full_filename(self):
+        if not self.__merged_file_full_filename:
+            raise ValueError('Full filename not informed for the merged file!')
 
-    def __add_separator_to_path_if_absent(self):
-        self.__files_to_merge_path = f'{self.__files_to_merge_path}{PATH_SEPARATOR}' \
-            if self.__files_to_merge_path and not self.__files_to_merge_path.endswith(PATH_SEPARATOR) \
-            else self.__files_to_merge_path
+    def __add_separator_to_files_to_merge_path_if_absent(self):
+        self.__files_to_merge_full_path = f'{self.__files_to_merge_full_path}{PATH_SEPARATOR}' \
+            if self.__files_to_merge_full_path and not self.__files_to_merge_full_path.endswith(PATH_SEPARATOR) \
+            else self.__files_to_merge_full_path
 
     def __validate_files_to_merge_path(self):
-        paths = self.__client.list_objects_v2(Bucket=self.__bucket_name, Prefix=self.__files_to_merge_path)
+        paths = self.__client.list_objects_v2(Bucket=self.__bucket_name, Prefix=self.__files_to_merge_full_path)
         if CONTENTS not in paths:
             raise FileNotFoundException('Files to merge path not found!')
         return paths
 
-    def __extract_file_extension_from_key(self) -> str:
-        return self.__new_file_key.split(DOT)[-1]
+    def __extract_extension_from_full_filename(self) -> str:
+        return self.__merged_file_full_filename.split(DOT)[-1]
 
-    def __merge_files(self, files_to_merge, new_file_extension):
-        new_file = ''
+    def __merge_files(self, files_to_merge, merged_file_extension):
+        merged_file = ''
         total_files_to_merge_with_initial_name = 0
 
         for file_content in files_to_merge[CONTENTS]:
-            file_to_merge_name = self.__extract_file_name_from_key(file_content[KEY])
-            file_to_merge_key = f'{self.__files_to_merge_path}{file_to_merge_name}'
+            file_to_merge_name = self.__extract_file_name_from_full_filename(file_content[KEY])
+            file_to_merge_full_filename = f'{self.__files_to_merge_full_path}{file_to_merge_name}'
 
             if file_to_merge_name.startswith(self.__files_to_merge_initial_name):
                 total_files_to_merge_with_initial_name += 1
 
-                if file_to_merge_name.endswith(new_file_extension):
-                    file_to_merge = self.__client.get_object(Bucket=self.__bucket_name, Key=file_to_merge_key)
-                    new_file = self.__merge_files_line_by_line(file_to_merge, new_file)
+                if file_to_merge_name.endswith(merged_file_extension):
+                    file_to_merge = self.__client.get_object(Bucket=self.__bucket_name, Key=file_to_merge_full_filename)
+                    merged_file = self.__merge_files_line_by_line(file_to_merge, merged_file)
 
                     if file_content == files_to_merge[CONTENTS][-1]:
-                        new_file = new_file[:-1]
+                        merged_file = merged_file[:-1]
 
-                    self.__upload_file_to_bucket(new_file)
+                    self.__upload_file_to_bucket(merged_file)
 
                 if self.__is_files_to_merge_deletion_enabled:
-                    self.__client.delete_object(Bucket=self.__bucket_name, Key=file_to_merge_key)
+                    self.__client.delete_object(Bucket=self.__bucket_name, Key=file_to_merge_full_filename)
 
         if not total_files_to_merge_with_initial_name:
-            raise FileNotFoundException(f'Files to merge not found with the initial name '
+            raise FileNotFoundException(f'Files to merge not found for the initial name '
                                         f'"{self.__files_to_merge_initial_name}"!')
 
-        return new_file
+        return merged_file
 
     @staticmethod
-    def __extract_file_name_from_key(file_key: str) -> str:
-        return file_key.split(PATH_SEPARATOR)[-1]
+    def __extract_file_name_from_full_filename(full_filename: str) -> str:
+        return full_filename.split(PATH_SEPARATOR)[-1]
 
     @staticmethod
-    def __merge_files_line_by_line(file_to_merge: dict, new_file: str) -> str:
+    def __merge_files_line_by_line(file_to_merge: dict, merged_file: str) -> str:
         for file_line_to_merge in file_to_merge[BODY].iter_lines():
             line_to_merge = file_line_to_merge.decode()
-            new_file += f'{line_to_merge}{LINE_BREAK}'
+            merged_file += f'{line_to_merge}{LINE_BREAK}'
 
-        return new_file
+        return merged_file
 
-    def __upload_file_to_bucket(self, new_file: str):
-        transfer_config = TransferConfig(multipart_threshold=self.__file_chunk_size_in_mb,
-                                         multipart_chunksize=self.__file_chunk_size_in_mb)
+    def __upload_file_to_bucket(self, merged_file: str):
+        transfer_config = TransferConfig(multipart_threshold=self.__merged_file_chunk_size_in_mb,
+                                         multipart_chunksize=self.__merged_file_chunk_size_in_mb)
 
-        with BytesIO(new_file.encode()) as f:
-            self.__client.upload_fileobj(Bucket=self.__bucket_name, Key=f'{self.__new_file_key}', Fileobj=f,
+        with BytesIO(merged_file.encode()) as f:
+            self.__client.upload_fileobj(Bucket=self.__bucket_name, Key=f'{self.__merged_file_full_filename}', Fileobj=f,
                                          Config=transfer_config)
 
     def __delete_success_files(self):
         success_files = [SUCCESS_NO_EXTENSION, SUCCESS_WITH_CRC_EXTENSION]
         for f in success_files:
-            self.__client.delete_object(Bucket=self.__bucket_name, Key=f'{self.__files_to_merge_path}{f}')
+            self.__client.delete_object(Bucket=self.__bucket_name, Key=f'{self.__files_to_merge_full_path}{f}')
 
 
 class BucketNotFoundException(Exception):
