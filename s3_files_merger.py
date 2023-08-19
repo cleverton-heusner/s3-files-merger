@@ -20,7 +20,7 @@ SUCCESS_NO_EXTENSION = '_SUCCESS'
 SUCCESS_WITH_CRC_EXTENSION = f'.{SUCCESS_NO_EXTENSION}.crc'
 
 
-class Builder:
+class S3FilesMergerBuilder:
 
     def __init__(self):
         self.__bucket_name = None
@@ -71,7 +71,7 @@ class Builder:
 
 class S3FilesMerger:
 
-    builder = Builder()
+    builder = S3FilesMergerBuilder()
 
     def __init__(self,
                  bucket_name,
