@@ -305,6 +305,34 @@ class S3FilesMergerTest(unittest.TestCase):
         self.assertEqual(expected_merged_file_content, actual_merged_file_content)
         self.assertEqual(expected_total_files_in_bucket, actual_total_files_in_bucket)
 
+    def test_when_s3_files_merger_is_created_with_builder_pattern(self):
+        # Arrange
+        dataset_path = f'{S3FilesMergerTest.datasets_path}base{sep}'
+        expected_merged_file_content = 'hello there\nhi me\nhi two\neai\nhi here'
+        expected_total_files_in_bucket = 1
+
+        files_to_send_to_s3 = ['part-00000.txt', 'part-00000.crc', 'part-00001.txt', 'part-00001.crc', '_SUCCESS',
+                               '._SUCCESS.crc']
+        for file in files_to_send_to_s3:
+            with open(f'{dataset_path}{file}', 'rb') as f:
+                self.s3.upload_fileobj(f, S3FilesMergerTest.BUCKET_NAME, file)
+
+        # Act
+        S3FilesMerger.builder \
+            .bucket_name(S3FilesMergerTest.BUCKET_NAME) \
+            .merged_file_full_filename('legal.txt') \
+            .files_to_merge_initial_name('part-') \
+            .build() \
+            .merge()
+
+        # Assert
+        merged_file = self.s3.get_object(Bucket=S3FilesMergerTest.BUCKET_NAME, Key='legal.txt')
+        actual_merged_file_content = merged_file['Body'].read().decode('utf-8')
+        actual_total_files_in_bucket = len(self.s3.list_objects_v2(Bucket=S3FilesMergerTest.BUCKET_NAME)['Contents'])
+
+        self.assertEqual(expected_merged_file_content, actual_merged_file_content)
+        self.assertEqual(expected_total_files_in_bucket, actual_total_files_in_bucket)
+
     def test_when_bucket_not_found(self):
         # Arrange
         expected_bucket_not_found_message = 'Bucket not found!'
