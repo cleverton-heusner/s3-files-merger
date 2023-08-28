@@ -1,6 +1,7 @@
 import boto3
 
 from boto3.s3.transfer import TransferConfig
+from botocore.client import BaseClient
 from botocore.exceptions import ClientError
 from io import BytesIO
 
@@ -30,7 +31,7 @@ class S3FilesMerger:
         self.__is_success_files_deletion_enabled = is_success_files_deletion_enabled
         self.__is_files_to_merge_deletion_enabled = is_files_to_merge_deletion_enabled
         self.__merged_file_chunk_size_in_mb = merged_file_chunk_size_in_mb
-        self.__client = boto_unzipper.get_client()[1]('s3')
+        self.__client: BaseClient = boto_unzipper.get_client()[1]('s3')
 
     def merge(self):
         self.__validate_bucket()
@@ -83,7 +84,7 @@ class S3FilesMerger:
         return paths
 
     def __extract_extension_from_full_filename(self) -> str:
-        return self.__merged_file_full_filename.split(DOT)[-1]
+        return self.__merged_file_full_filename.split(Constant.DOT)[-1]
 
     def __merge_files(self, files_to_merge, merged_file_extension):
         merged_file = ''

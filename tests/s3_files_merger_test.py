@@ -318,12 +318,14 @@ class S3FilesMergerTest(unittest.TestCase):
                 self.s3.upload_fileobj(f, S3FilesMergerTest.BUCKET_NAME, file)
 
         # Act
-        S3FilesMerger.builder \
-            .bucket_name(S3FilesMergerTest.BUCKET_NAME) \
-            .merged_file_full_filename('legal.txt') \
-            .files_to_merge_initial_name('part-') \
-            .build() \
+        (
+            S3FilesMerger.builder
+            .bucket_name(S3FilesMergerTest.BUCKET_NAME)
+            .merged_file_full_filename('legal.txt')
+            .files_to_merge_initial_name('part-')
+            .build()
             .merge()
+        )
 
         # Assert
         merged_file = self.s3.get_object(Bucket=S3FilesMergerTest.BUCKET_NAME, Key='legal.txt')

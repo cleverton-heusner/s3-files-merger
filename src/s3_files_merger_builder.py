@@ -41,7 +41,7 @@ class S3FilesMergerBuilder:
         return self
 
     def build(self):
-        from s3_files_merger import S3FilesMerger
+        from src.s3_files_merger import S3FilesMerger
         return S3FilesMerger(self.__bucket_name,
                              self.__merged_file_full_filename,
                              self.__files_to_merge_initial_name,
