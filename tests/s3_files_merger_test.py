@@ -4,7 +4,7 @@ import os
 import unittest
 
 from os.path import sep, join, dirname
-from s3_files_merger import S3FilesMerger, BucketNotFoundException, FileNotFoundException
+from src.s3_files_merger import S3FilesMerger, BucketNotFoundException, FileNotFoundException
 
 
 @moto.mock_s3
